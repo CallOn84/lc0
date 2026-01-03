@@ -1,6 +1,6 @@
 /*
   This file is part of Leela Chess Zero.
-  Copyright (C) 2021 The LCZero Authors
+  Copyright (C) 2018-2021 The LCZero Authors
 
   Leela Chess is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,8 +27,9 @@
 
 #pragma once
 
-#include "mcts/node.h"
-#include "trainingdata/writer.h"
+#include <fstream>
+#include <zlib.h>
+#include "utils/cppattributes.h"
 
 namespace lczero {
 
@@ -87,27 +88,30 @@ static_assert(sizeof(V6TrainingData) == 8356, "Wrong struct size");
 
 #pragma pack(pop)
 
-class V6TrainingDataArray {
+class TrainingDataWr
+iter {
  public:
-  V6TrainingDataArray(FillEmptyHistory white_fill_empty_history,
-                      FillEmptyHistory black_fill_empty_history,
-                      pblczero::NetworkFormat::InputFormat input_format)
-      : fill_empty_history_{white_fill_empty_history, black_fill_empty_history},
-        input_format_(input_format) {}
+  // Creates a new file to write in data directory. It will has @game_id
+  // somewhere in the filename.
+  TrainingDataWriter(int game_id, std:string folder = "");
+  TrainingDataWriter(std::string filename);
 
-  // Add a chunk.
-  void Add(const Node* node, const PositionHistory& history, Eval best_eval,
-           Eval played_eval, bool best_is_proven, Move best_move,
-           Move played_move, const NNCacheLock& nneval);
+  ~TrainingDataWriter() {
+    if (fout_) Finalize();
+  }
 
-  // Writes training data to a file.
-  void Write(TrainingDataWriter* writer, GameResult result,
-             bool adjudicated) const;
+  // Writes a chunk.
+  void WriteChunk(const V6TrainingData& data);
+
+  // Flushes file and closes it.
+  void Finalize();
+
+  // Gets full filename of the file written.
+  std::string GetFileName() const { return filename_; }
 
  private:
-  std::vector<V6TrainingData> training_data_;
-  FillEmptyHistory fill_empty_history_[2];
-  pblczero::NetworkFormat::InputFormat input_format_;
+  std::string filename_;
+  gzFile fout_;
 };
 
 }  // namespace lczero
