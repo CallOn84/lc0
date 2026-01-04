@@ -25,9 +25,8 @@
   Program grant you additional permission to convey the resulting work.
 */
 
-#include "trainingdata/writer.h"
+#include "neural/writer.h"
 
-#include "trainingdata/trainingdata.h"
 #include "utils/exception.h"
 #include "utils/filesystem.h"
 #include "utils/random.h"
